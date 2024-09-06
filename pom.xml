@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.janusgraph</groupId>
     <artifactId>janusgraph</artifactId>
@@ -86,7 +86,8 @@
         <gpg.skip>false</gpg.skip>
         <maven.gpg.version>3.0.1</maven.gpg.version>
         <perf.jvm.opts />
-        <default.test.jvm.opts>-Xms256m -Xmx768m -XX:+HeapDumpOnOutOfMemoryError -ea ${test.extra.jvm.opts}</default.test.jvm.opts>
+        <default.test.jvm.opts>-Xms256m -Xmx768m -XX:+HeapDumpOnOutOfMemoryError -ea
+            ${test.extra.jvm.opts}</default.test.jvm.opts>
         <mem.jvm.opts>-Xms256m -Xmx256m -ea -XX:+HeapDumpOnOutOfMemoryError ${test.extra.jvm.opts}</mem.jvm.opts>
         <test.extra.jvm.opts />
         <test.skip.default>false</test.skip.default>
@@ -101,7 +102,8 @@
         <!-- When this version updated please also update sha256 -->
         <!-- https://downloads.apache.org/cassandra/4.0.6/apache-cassandra-4.0.6-bin.tar.gz.sha256 -->
         <cassandra-dist.version>4.0.6</cassandra-dist.version>
-        <cassandra-dist.version.sha256>86d14a8e158e4e8554388b1aab598efcb879ddb09c480edecabb3c350b58fe6b</cassandra-dist.version.sha256>
+        <cassandra-dist.version.sha256>
+            86d14a8e158e4e8554388b1aab598efcb879ddb09c480edecabb3c350b58fe6b</cassandra-dist.version.sha256>
         <cassandra-driver.version>4.17.0</cassandra-driver.version>
         <scylla-driver.version>4.17.0.0</scylla-driver.version>
         <scylladb.version>5.1.4</scylladb.version>
@@ -162,6 +164,65 @@
     <build>
         <directory>${basedir}/target</directory>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                            <useDependencyReducedPomInJar>true</useDependencyReducedPomInJar>
+                            <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+                            <shadeSourcesContent>true</shadeSourcesContent>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+
+                            <transformers>
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <janusgraphVersion>${project.version}</janusgraphVersion>
+                                        <tinkerpopVersion>${tinkerpop.version}</tinkerpopVersion>
+                                        <version>${tinkerpop.version}</version>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                            <artifactSet>
+                                <includes>
+                                    <include>${project.groupId}:${project.artifactId}</include>
+<!--                                    <include>com.google.guava:guava</include>-->
+                                </includes>
+                            </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.google.common</pattern>
+                                    <shadedPattern>org.janusgraph.shaded.com.google.common</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>com.google.guava:guava</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -309,9 +370,11 @@
                             <module name="UniqueProperties" />
                             <module name="TreeWalker">
                                 <!-- <property name="tabWidth" value="4"/> -->
-                                <!-- Annotations: https://checkstyle.sourceforge.io/config_annotation.html -->
+                                <!-- Annotations:
+                                https://checkstyle.sourceforge.io/config_annotation.html -->
                                 <module name="MissingOverride" />
-                                <!-- Class Design: https://checkstyle.sourceforge.io/config_design.html -->
+                                <!-- Class Design:
+                                https://checkstyle.sourceforge.io/config_design.html -->
                                 <module name="OneTopLevelClass" />
                                 <!-- Coding: https://checkstyle.sourceforge.io/config_coding.html-->
                                 <module name="CovariantEquals" />
@@ -330,13 +393,15 @@
                                 <module name="AvoidStarImport" />
                                 <module name="CustomImportOrder">
                                     <property name="customImportOrderRules"
-                                              value="THIRD_PARTY_PACKAGE###STANDARD_JAVA_PACKAGE###STATIC"/>
+                                        value="THIRD_PARTY_PACKAGE###STANDARD_JAVA_PACKAGE###STATIC" />
                                 </module>
-                                <!-- Miscellaneous: https://checkstyle.sourceforge.io/config_misc.html -->
+                                <!-- Miscellaneous:
+                                https://checkstyle.sourceforge.io/config_misc.html -->
                                 <module name="ArrayTypeStyle" />
                                 <module name="OuterTypeFilename" />
                                 <module name="UpperEll" />
-                                <!-- Modifiers: https://checkstyle.sourceforge.io/config_modifier.html -->
+                                <!-- Modifiers:
+                                https://checkstyle.sourceforge.io/config_modifier.html -->
                                 <module name="ModifierOrder" />
                                 <!-- <module name="RedundantModifier" /> -->
                             </module>
@@ -504,6 +569,7 @@
                     <version>0.8.11</version>
                 </plugin>
             </plugins>
+
         </pluginManagement>
     </build>
     <dependencyManagement>
@@ -1497,6 +1563,7 @@
                             </execution>
                         </executions>
                     </plugin>
+
                 </plugins>
             </build>
         </profile>
@@ -1632,21 +1699,26 @@
                                 </goals>
                                 <configuration>
                                     <target>
-                                        <taskdef name="report" classname="org.jacoco.ant.ReportTask" classpathref="maven.plugin.classpath" />
+                                        <taskdef name="report" classname="org.jacoco.ant.ReportTask"
+                                            classpathref="maven.plugin.classpath" />
                                         <report>
                                             <executiondata>
-                                                <file file="${top.level.basedir}/target/jacoco-combined.exec" />
+                                                <file
+                                                    file="${top.level.basedir}/target/jacoco-combined.exec" />
                                             </executiondata>
                                             <structure name="Integration test coverage">
                                                 <classfiles>
-                                                    <fileset dir="${project.build.directory}/jacoco-classes" />
+                                                    <fileset
+                                                        dir="${project.build.directory}/jacoco-classes" />
                                                 </classfiles>
                                                 <sourcefiles encoding="UTF-8">
-                                                    <fileset dir="${project.build.directory}/jacoco-sources" />
+                                                    <fileset
+                                                        dir="${project.build.directory}/jacoco-sources" />
                                                 </sourcefiles>
                                             </structure>
                                             <html destdir="${project.build.directory}/jacoco-report" />
-                                            <xml destfile="${project.build.directory}/jacoco-report/report.xml" />
+                                            <xml
+                                                destfile="${project.build.directory}/jacoco-report/report.xml" />
                                         </report>
                                     </target>
                                 </configuration>
